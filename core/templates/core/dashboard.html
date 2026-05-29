@@ -1,0 +1,121 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard | Aquadance Fitness Hub{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-white tracking-tight">Aquadance Member Hub</h1>
+    <p class="text-sm text-zinc-400 mt-1">Manage your member database and track daily gym activity.</p>
+</div>
+
+{% if expired_count > 0 %}
+<div class="bg-red-950/20 border border-red-500/30 p-4 rounded-xl mb-8 text-red-400 text-sm flex items-center justify-between">
+    <span>⚠️ You have <strong>{{ expired_count }}</strong> members with expired plans.</span>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Registered Members</p>
+            <h3 class="text-3xl font-bold text-white mt-2">{{ total_members }}</h3>
+        </div>
+        <div class="w-12 h-12 bg-zinc-800/80 border border-zinc-700/50 rounded-xl flex items-center justify-center text-zinc-400">
+            <i class="fa-solid fa-users text-lg"></i>
+        </div>
+    </div>
+    <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Memberships</p>
+            <h3 class="text-3xl font-bold text-cyan-400 mt-2">{{ active_payments }}</h3>
+        </div>
+        <div class="w-12 h-12 bg-cyan-950/40 border border-cyan-900/50 rounded-xl flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-id-card text-lg"></i>
+        </div>
+    </div>
+    <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Today's Total Attendance</p>
+            <h3 class="text-3xl font-bold text-blue-400 mt-2">{{ total_refills }}</h3>
+        </div>
+        <div class="w-12 h-12 bg-blue-950/40 border border-blue-900/50 rounded-xl flex items-center justify-center text-blue-400">
+            <i class="fa-solid fa-calendar-check text-lg"></i>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
+            <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-cyan-400 text-sm"></i> Quick Actions
+            </h2>
+            <form method="POST" action="{% url 'dashboard' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="process_membership_action" value="1">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">1. Select Member</label>
+                    <select name="member_id" required class="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none">
+                        <option value="" disabled selected>-- Choose Member --</option>
+                        {% for m in members %}
+                            <option value="{{ m.id }}">{{ m.first_name }} {{ m.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">2. Choose Plan</label>
+                    <select name="plan_id" required class="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none">
+                        <option value="" disabled selected>-- Choose Plan --</option>
+                        {% for plan in plans %}
+                            <option value="{{ plan.id }}">{{ plan.name }} (₱{{ plan.price }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button type="submit" name="action_type" value="check_in" class="py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl text-[11px] uppercase tracking-wider transition-all">Check In</button>
+                    <button type="submit" name="action_type" value="renew_plan" class="py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-xl text-[11px] uppercase tracking-wider transition-all">Renew</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="lg:col-span-3 bg-zinc-900/30 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm h-fit">
+        <div class="p-6 border-b border-zinc-800/80 bg-zinc-900/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-address-book text-zinc-500 text-lg"></i> Member Directory
+            </h2>
+            <form method="GET" action="{% url 'dashboard' %}" class="flex items-center max-w-md w-full relative">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search members..." class="w-full pl-4 pr-10 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500">
+            </form>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-zinc-500 text-[10px] uppercase tracking-widest border-b border-zinc-800">
+                        <th class="py-4 px-6">Member Name</th>
+                        <th class="py-4 px-6">Status</th>
+                        <th class="py-4 px-6 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/50 text-sm text-zinc-300">
+                    {% for m in members %}
+                    <tr class="hover:bg-zinc-800/20">
+                        <td class="py-4 px-6 font-medium text-white">{{ m.first_name }} {{ m.last_name }}</td>
+                        <td class="py-4 px-6">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase {{ m.status_color }} {{ m.bg_color }} border border-current/20">
+                                {{ m.status }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <a href="/admin/core/member/{{ m.id }}/change/" target="_blank" class="text-cyan-400 hover:text-cyan-300 text-xs font-semibold">Edit Profile</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="py-12 text-center text-zinc-500">No members found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

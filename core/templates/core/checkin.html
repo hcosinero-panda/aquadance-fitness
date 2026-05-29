@@ -1,0 +1,286 @@
+{% extends 'core/base.html' %}
+
+{% block title %}QR Code Check-In | Aquafit{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-white tracking-tight">Quick Check-In</h1>
+    <p class="text-sm text-zinc-400 mt-1">Scan QR code or enter member ID</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Scanner/Input Section -->
+    <div class="lg:col-span-1">
+        <div class="bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
+            <h2 class="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-qrcode text-cyan-400 text-sm"></i> Member Check-In
+            </h2>
+            
+            <!-- Mode Buttons -->
+            <div class="flex gap-2 mb-6">
+                <button onclick="switchMode('camera')" id="cameraBtn" 
+                    class="flex-1 py-2 px-3 bg-cyan-500 text-zinc-950 font-bold rounded-lg text-sm transition-all">
+                    📹 Scan QR
+                </button>
+                <button onclick="switchMode('manual')" id="manualBtn" 
+                    class="flex-1 py-2 px-3 bg-zinc-700 text-white font-bold rounded-lg text-sm transition-all">
+                    ⌨️ Type ID
+                </button>
+            </div>
+
+            <!-- Camera Mode -->
+            <div id="cameraMode" class="hidden space-y-4">
+                <video id="video" width="100%" class="rounded-lg border-2 border-zinc-800 bg-black" style="max-height: 300px;"></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <p class="text-xs text-zinc-400">Point camera at QR code</p>
+            </div>
+
+            <!-- Manual ID Mode -->
+            <div id="manualMode" class="space-y-4">
+                <form id="scanForm" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Member ID</label>
+                        <input type="text" id="memberIdInput" name="member_id" autofocus placeholder="e.g., MEM-001539"
+                               class="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none uppercase">
+                    </div>
+                </form>
+                <p class="text-xs text-zinc-400">Type or paste member ID from card</p>
+            </div>
+            
+            <!-- Feedback Message -->
+            <div id="feedback" class="p-4 rounded-xl text-sm font-medium hidden space-y-3">
+                <div id="feedbackPhoto" class="text-center hidden">
+                    <img id="feedbackPhotoImg" src="" alt="Member" width="80" height="80" style="border-radius: 50%; margin: 0 auto;" />
+                </div>
+                <div id="feedbackText"></div>
+                <div id="feedbackExpiration" class="text-xs p-2 rounded bg-black/20 hidden"></div>
+            </div>
+
+            <div class="mt-6 p-4 bg-zinc-950/50 border border-zinc-800 rounded-xl">
+                <p class="text-[10px] text-zinc-500 leading-relaxed">
+                    💡 <strong>Tip:</strong> Use QR scan for faster check-in. Type ID if you don't have the QR code handy.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Check-ins Section -->
+    <div class="lg:col-span-2 bg-zinc-900/30 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm h-fit">
+        <div class="p-6 border-b border-zinc-800/80 bg-zinc-900/20">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-clock text-emerald-400 text-lg"></i> Recent Check-ins (Today)
+            </h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-zinc-500 text-[10px] uppercase tracking-widest border-b border-zinc-800">
+                        <th class="py-4 px-6">Member ID</th>
+                        <th class="py-4 px-6">Name</th>
+                        <th class="py-4 px-6">Check-in Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/50 text-sm text-zinc-300">
+                    {% for checkin in recent_checkins %}
+                    <tr class="hover:bg-zinc-800/20">
+                        <td class="py-4 px-6 font-mono text-cyan-400 font-bold">{{ checkin.member.member_id }}</td>
+                        <td class="py-4 px-6 font-medium text-white">{{ checkin.member.first_name }} {{ checkin.member.last_name }}</td>
+                        <td class="py-4 px-6 text-emerald-400">
+                            {% load tz %}
+                            {% localtime on %}{{ checkin.check_in_time|date:"g:i A" }}{% endlocaltime %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="py-12 text-center text-zinc-500">No check-ins today yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+let currentMode = 'camera';
+let cameraStream = null;
+
+// Initialize
+window.addEventListener('load', () => {
+    switchMode('camera');
+});
+
+function switchMode(mode) {
+    currentMode = mode;
+    const cameraMode = document.getElementById('cameraMode');
+    const manualMode = document.getElementById('manualMode');
+    const cameraBtn = document.getElementById('cameraBtn');
+    const manualBtn = document.getElementById('manualBtn');
+    
+    if (mode === 'camera') {
+        cameraMode.classList.remove('hidden');
+        manualMode.classList.add('hidden');
+        cameraBtn.classList.remove('bg-zinc-700', 'text-white');
+        cameraBtn.classList.add('bg-cyan-500', 'text-zinc-950');
+        manualBtn.classList.remove('bg-cyan-500', 'text-zinc-950');
+        manualBtn.classList.add('bg-zinc-700', 'text-white');
+        startCamera();
+    } else {
+        cameraMode.classList.add('hidden');
+        manualMode.classList.remove('hidden');
+        cameraBtn.classList.remove('bg-cyan-500', 'text-zinc-950');
+        cameraBtn.classList.add('bg-zinc-700', 'text-white');
+        manualBtn.classList.remove('bg-zinc-700', 'text-white');
+        manualBtn.classList.add('bg-cyan-500', 'text-zinc-950');
+        stopCamera();
+        document.getElementById('memberIdInput').focus();
+    }
+}
+
+async function startCamera() {
+    try {
+        const video = document.getElementById('video');
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
+        video.srcObject = cameraStream;
+        video.play();
+        scanQRCode();
+    } catch (err) {
+        showFeedback('Camera not available. Use manual entry instead.', false);
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+    }
+}
+
+function scanQRCode() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const scan = () => {
+        if (currentMode !== 'camera' || !cameraStream) return;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            processScan(code.data);
+        } else {
+            requestAnimationFrame(scan);
+        }
+    };
+    requestAnimationFrame(scan);
+}
+
+function processScan(memberId) {
+    const formData = new FormData();
+    formData.append('member_id', memberId.trim().toUpperCase());
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+    fetch('{% url "scan_qr_api" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const photoDiv = document.getElementById('feedbackPhoto');
+        const photoImg = document.getElementById('feedbackPhotoImg');
+        const expirationDiv = document.getElementById('feedbackExpiration');
+        
+        if (data.success) {
+            let message = `Welcome ${data.member_name}!`;
+            let expirationText = '';
+            
+            if (data.days_until_expiration !== null) {
+                if (data.days_until_expiration === 0) {
+                    expirationText = 'Expires TODAY';
+                } else if (data.days_until_expiration === 1) {
+                    expirationText = 'Expires TOMORROW';
+                } else if (data.days_until_expiration <= 7) {
+                    expirationText = `Expires in ${data.days_until_expiration} days`;
+                } else {
+                    expirationText = `Expires on ${data.expiration_date}`;
+                }
+            }
+            
+            showFeedback(message, true, data.photo, expirationText);
+        } else if (data.status === 'expired') {
+            let expirationText = `Expired: ${data.expiration_date}`;
+            showFeedback(`Membership Expired\n${data.member_name}`, false, data.photo, expirationText);
+        } else if (data.status === 'duplicate') {
+            let expirationText = `Expires: ${data.expiration_date}`;
+            if (data.days_until_expiration !== null) {
+                expirationText += ` (${data.days_until_expiration} days)`;
+            }
+            showFeedback(`Already checked in today\n${data.member_name}`, false, data.photo, expirationText);
+        } else {
+            showFeedback(`Error: ${data.message}`, false, null, '');
+        }
+        
+        setTimeout(() => {
+            if (data.success) location.reload();
+        }, 2500);
+    })
+    .catch(error => {
+        showFeedback('Error: ' + error, false, null, '');
+    });
+}
+
+function showFeedback(message, success, photoUrl, expirationText) {
+    const feedback = document.getElementById('feedback');
+    const feedbackText = document.getElementById('feedbackText');
+    const photoDiv = document.getElementById('feedbackPhoto');
+    const photoImg = document.getElementById('feedbackPhotoImg');
+    const expirationDiv = document.getElementById('feedbackExpiration');
+    
+    if (success) {
+        feedback.className = 'p-4 rounded-xl text-sm font-medium bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 space-y-3';
+    } else {
+        feedback.className = 'p-4 rounded-xl text-sm font-medium bg-red-500/20 border border-red-500/50 text-red-300 space-y-3';
+    }
+    
+    // Show photo if available
+    if (photoUrl) {
+        photoImg.src = photoUrl;
+        photoDiv.classList.remove('hidden');
+    } else {
+        photoDiv.classList.add('hidden');
+    }
+    
+    feedbackText.textContent = message;
+    
+    // Show expiration info
+    if (expirationText) {
+        expirationDiv.textContent = expirationText;
+        expirationDiv.classList.remove('hidden');
+    } else {
+        expirationDiv.classList.add('hidden');
+    }
+    
+    feedback.classList.remove('hidden');
+}
+
+// Manual ID input
+document.getElementById('memberIdInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && currentMode === 'manual') {
+        e.preventDefault();
+        const memberId = this.value.trim();
+        if (memberId) {
+            processScan(memberId);
+        }
+    }
+});
+</script>
+
+{% endblock %}
+

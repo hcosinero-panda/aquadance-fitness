@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Cards | Aquafit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .card { page-break-inside: avoid; }
+        }
+        
+        .membership-card {
+            width: 3.5in;
+            height: 2.125in;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .membership-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .card-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .card-name {
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        
+        .card-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .card-status.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .card-qr {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+        }
+        
+        .card-qr img {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .card-footer {
+            font-size: 9px;
+            text-align: center;
+            color: #9ca3af;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(3.5in, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950">
+    <div class="no-print max-w-7xl mx-auto p-8">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Membership Cards</h1>
+                <p class="text-zinc-400 mt-1">Print cards for {{ members.count }} members</p>
+            </div>
+            <button onclick="window.print()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-lg">
+                🖨️ Print Cards
+            </button>
+        </div>
+    </div>
+
+    <!-- Membership Cards -->
+    <div class="cards-grid">
+        {% for member in members %}
+        <div class="card">
+            <div class="membership-card">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-name">
+                            {{ member.first_name }}<br>{{ member.last_name }}
+                        </div>
+                        <div class="card-status {% if not member.is_active %}inactive{% endif %}">
+                            {% if member.is_active %}Active{% else %}Expired{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-qr">
+                        {% if member.qr_code_b64 %}
+                        <img src="data:image/png;base64,{{ member.qr_code_b64 }}" alt="QR Code">
+                        {% else %}
+                        <div class="text-xs text-zinc-400">QR unavailable</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        {{ member.member_id }}<br>Aquafit Member
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Auto-fit cards for printing
+        if (window.location.search.includes('print')) {
+            setTimeout(() => window.print(), 500);
+        }
+    </script>
+</body>
+</html>
