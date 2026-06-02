@@ -1,0 +1,48 @@
+{% extends "core/admin/base.html" %}
+
+{% block title %}Record Payment{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Member *</label>
+                <select name="member_id" required class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+                    <option value="">Select Member</option>
+                    {% for member in members %}
+                    <option value="{{ member.id }}">{{ member.first_name }} {{ member.last_name }} ({{ member.member_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Membership Plan *</label>
+                <select name="plan_id" required class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+                    <option value="">Select Plan</option>
+                    {% for plan in plans %}
+                    <option value="{{ plan.id }}">{{ plan.name }} - ₱{{ plan.price }} ({{ plan.duration_days }} days)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Payment Date *</label>
+                <input type="date" name="payment_date" required value="{% now 'Y-m-d' %}" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+            </div>
+            
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded">
+                    <i class="fas fa-check"></i> Record Payment
+                </button>
+                <a href="{% url 'manage_payments' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

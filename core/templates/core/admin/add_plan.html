@@ -1,0 +1,38 @@
+{% extends "core/admin/base.html" %}
+
+{% block title %}Add New Plan{% endblock %}
+{% block page_title %}Add New Membership Plan{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Plan Name *</label>
+                <input type="text" name="name" required placeholder="e.g., Monthly Gym Pass" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Price (₱) *</label>
+                <input type="number" name="price" required step="0.01" placeholder="e.g., 1500" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">Duration (Days) *</label>
+                <input type="number" name="duration_days" required placeholder="e.g., 30" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white">
+            </div>
+            
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded">
+                    <i class="fas fa-check"></i> Add Plan
+                </button>
+                <a href="{% url 'manage_membership_plans' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

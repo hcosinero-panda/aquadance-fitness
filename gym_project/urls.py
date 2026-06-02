@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from core import views
 
 urlpatterns = [
-    # Django Backend Admin
+    # Django Admin (owner-only) - Replace custom admin-dashboard
     path('admin/', admin.site.urls),
     
     # Custom Staff/Student Portal Frontend Routes
@@ -24,9 +24,6 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Customize admin site
-admin.site.site_header = "Aquafit administration"
+admin.site.site_header = "Aquafit Management System"
 admin.site.site_title = "Aquafit Admin"
-admin.site.index_title = "Aquafit Management Hub"
-
-# Add footer with back button
-admin.site.site_footer = '<div style="margin-top: 20px; text-align: center;"><a href="/staff-portal/" style="display: inline-block; padding: 10px 20px; background-color: #06b6d4; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">← Back to Staff Portal</a></div>'
+admin.site.index_title = "Admin Dashboard"

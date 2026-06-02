@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.AdminSuperuserOnlyMiddleware',  # Protect /admin/ from non-superusers
 ]
 
 ROOT_URLCONF = 'gym_project.urls'

@@ -1,0 +1,48 @@
+{% extends "core/admin/base.html" %}
+
+{% block title %}Manage Payments{% endblock %}
+{% block page_title %}Manage Payments{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <h3 class="text-2xl font-bold">Total Revenue: <span class="text-yellow-400">₱{{ total_revenue|floatformat:2 }}</span></h3>
+        <a href="{% url 'add_payment' %}" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded">
+            <i class="fas fa-plus"></i> Record Payment
+        </a>
+    </div>
+</div>
+
+<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-700 border-b border-gray-600">
+                <tr>
+                    <th class="text-left py-3 px-4">Member</th>
+                    <th class="text-left py-3 px-4">Membership Plan</th>
+                    <th class="text-left py-3 px-4">Amount</th>
+                    <th class="text-left py-3 px-4">Payment Date</th>
+                    <th class="text-left py-3 px-4">Expiration</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr class="border-b border-gray-700 hover:bg-gray-700">
+                    <td class="py-3 px-4">{{ payment.member.first_name }} {{ payment.member.last_name }}</td>
+                    <td class="py-3 px-4">{{ payment.membership_plan.name }}</td>
+                    <td class="py-3 px-4 text-green-400 font-bold">₱{{ payment.amount_paid }}</td>
+                    <td class="py-3 px-4 text-gray-400">{{ payment.payment_date|date:"M d, Y" }}</td>
+                    <td class="py-3 px-4">{{ payment.expiration_date|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-8 px-4 text-center text-gray-400">
+                        No payments recorded
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

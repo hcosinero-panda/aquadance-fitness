@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import AdminSite
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.urls import reverse
 from datetime import timedelta
 from .models import MembershipPlan, Member, Payment, Attendance
@@ -16,6 +16,10 @@ admin.site.site_header = "Aquafit administration"
 admin.site.site_title = "Aquafit Admin"
 admin.site.index_title = "Aquafit Management Hub"
 
+# ============================================================================
+# ADMIN MODELS - Registered for owner-only access through /admin/
+# ============================================================================
+# Only superuser can access these. Members cannot see /admin/ at all.
 
 @admin.register(MembershipPlan)
 class MembershipPlanAdmin(admin.ModelAdmin):
@@ -105,11 +109,16 @@ class MemberAdmin(admin.ModelAdmin):
         """Show expiration status in list view"""
         if obj.is_active():
             if obj.is_expiring_soon():
-                return format_html('<span style="color: orange; font-weight: bold;">Expiring Soon</span>')
-            return format_html('<span style="color: green; font-weight: bold;">Active</span>')
-        return format_html('<span style="color: red; font-weight: bold;">Expired</span>')
+                return mark_safe('<span style="color: orange; font-weight: bold;">Expiring Soon</span>')
+            return mark_safe('<span style="color: green; font-weight: bold;">Active</span>')
+        return mark_safe('<span style="color: red; font-weight: bold;">Expired</span>')
     expiration_status.short_description = "Status"
 
+
+# ============================================================================
+# PAYMENT AND ATTENDANCE - REGISTERED FOR OWNER-ONLY ACCESS
+# ============================================================================
+# Only superuser can access these. Members cannot see /admin/ at all.
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
@@ -174,8 +183,10 @@ class PaymentAdmin(admin.ModelAdmin):
     days_valid.short_description = "Plan Duration"
 
 
-@admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
     list_display = ('member', 'check_in_time', 'water_refills_purchased')
     list_filter = ('check_in_time',)
     search_fields = ('member__first_name', 'member__last_name')
+
+
+admin.site.register(Attendance, AttendanceAdmin)

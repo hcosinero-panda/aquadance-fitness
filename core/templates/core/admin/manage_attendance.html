@@ -1,0 +1,43 @@
+{% extends "core/admin/base.html" %}
+
+{% block title %}Manage Attendance{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <h3 class="text-lg font-bold">Today's Check-ins: <span class="text-cyan-400">{{ today_count }}</span></h3>
+    </div>
+</div>
+
+<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-700 border-b border-gray-600">
+                <tr>
+                    <th class="text-left py-3 px-4">Member</th>
+                    <th class="text-left py-3 px-4">Member ID</th>
+                    <th class="text-left py-3 px-4">Check-in Time</th>
+                    <th class="text-left py-3 px-4">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendance %}
+                <tr class="border-b border-gray-700 hover:bg-gray-700">
+                    <td class="py-3 px-4">{{ att.member.first_name }} {{ att.member.last_name }}</td>
+                    <td class="py-3 px-4 text-cyan-400">{{ att.member.member_id }}</td>
+                    <td class="py-3 px-4 text-green-400 font-bold">{{ att.check_in_time|time:"h:i A" }}</td>
+                    <td class="py-3 px-4 text-gray-400">{{ att.check_in_time|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="py-8 px-4 text-center text-gray-400">
+                        No attendance records
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

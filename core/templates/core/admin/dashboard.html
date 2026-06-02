@@ -1,0 +1,94 @@
+{% extends "core/admin/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Members -->
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-400 text-sm">Total Members</p>
+                <h3 class="text-3xl font-bold text-cyan-400 mt-2">{{ total_members }}</h3>
+            </div>
+            <i class="fas fa-users text-cyan-400 text-3xl opacity-20"></i>
+        </div>
+    </div>
+    
+    <!-- Active Members -->
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-400 text-sm">Active Members</p>
+                <h3 class="text-3xl font-bold text-green-400 mt-2">{{ active_members }}</h3>
+            </div>
+            <i class="fas fa-check-circle text-green-400 text-3xl opacity-20"></i>
+        </div>
+    </div>
+    
+    <!-- Expired Members -->
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-400 text-sm">Expired Members</p>
+                <h3 class="text-3xl font-bold text-red-400 mt-2">{{ expired_members }}</h3>
+            </div>
+            <i class="fas fa-exclamation-circle text-red-400 text-3xl opacity-20"></i>
+        </div>
+    </div>
+    
+    <!-- Total Revenue -->
+    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-400 text-sm">Total Revenue</p>
+                <h3 class="text-3xl font-bold text-yellow-400 mt-2">₱{{ total_revenue|floatformat:2 }}</h3>
+            </div>
+            <i class="fas fa-money-bill-wave text-yellow-400 text-3xl opacity-20"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Activity -->
+<div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+    <h3 class="text-xl font-bold mb-4">Today's Activity</h3>
+    <div class="text-3xl font-bold text-blue-400">
+        <i class="fas fa-sign-in-alt"></i> {{ today_checkins }} Check-ins
+    </div>
+</div>
+
+<!-- Recent Payments -->
+<div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Recent Payments</h3>
+        <a href="{% url 'manage_payments' %}" class="text-cyan-400 text-sm hover:underline">View All</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="border-b border-gray-700">
+                <tr>
+                    <th class="text-left py-2 px-4">Member</th>
+                    <th class="text-left py-2 px-4">Plan</th>
+                    <th class="text-left py-2 px-4">Amount</th>
+                    <th class="text-left py-2 px-4">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in recent_payments %}
+                <tr class="border-b border-gray-700 hover:bg-gray-700">
+                    <td class="py-2 px-4">{{ payment.member.first_name }} {{ payment.member.last_name }}</td>
+                    <td class="py-2 px-4">{{ payment.membership_plan.name }}</td>
+                    <td class="py-2 px-4 text-green-400">₱{{ payment.amount_paid }}</td>
+                    <td class="py-2 px-4 text-gray-400">{{ payment.payment_date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="py-4 px-4 text-center text-gray-400">No payments yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

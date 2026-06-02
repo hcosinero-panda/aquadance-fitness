@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - Aquadance Fitness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 border-r border-gray-700 p-6">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-cyan-400">
+                    <i class="fas fa-lock"></i> Admin Panel
+                </h1>
+                <p class="text-sm text-gray-400 mt-2">Owner Only</p>
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 rounded {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-cyan-600{% else %}hover:bg-gray-700{% endif %}">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{% url 'manage_members' %}" class="block px-4 py-2 rounded {% if request.resolver_match.url_name == 'manage_members' or request.resolver_match.url_name == 'member_detail' or request.resolver_match.url_name == 'add_member' %}bg-cyan-600{% else %}hover:bg-gray-700{% endif %}">
+                    <i class="fas fa-users"></i> Members
+                </a>
+                <a href="{% url 'manage_attendance' %}" class="block px-4 py-2 rounded {% if request.resolver_match.url_name == 'manage_attendance' %}bg-cyan-600{% else %}hover:bg-gray-700{% endif %}">
+                    <i class="fas fa-clipboard-check"></i> Attendance
+                </a>
+                <a href="{% url 'manage_payments' %}" class="block px-4 py-2 rounded {% if request.resolver_match.url_name == 'manage_payments' or request.resolver_match.url_name == 'add_payment' %}bg-cyan-600{% else %}hover:bg-gray-700{% endif %}">
+                    <i class="fas fa-credit-card"></i> Payments
+                </a>
+                <a href="{% url 'manage_membership_plans' %}" class="block px-4 py-2 rounded {% if request.resolver_match.url_name == 'manage_membership_plans' or request.resolver_match.url_name == 'add_membership_plan' %}bg-cyan-600{% else %}hover:bg-gray-700{% endif %}">
+                    <i class="fas fa-tags"></i> Plans
+                </a>
+            </nav>
+            
+            <hr class="my-6 border-gray-700">
+            
+            <a href="{% url 'dashboard' %}" class="block px-4 py-2 rounded hover:bg-gray-700 text-blue-400">
+                <i class="fas fa-arrow-left"></i> Back to Portal
+            </a>
+            <a href="{% url 'logout' %}" class="block px-4 py-2 rounded hover:bg-red-900 text-red-400 mt-2">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">{% block page_title %}Dashboard{% endblock %}</h2>
+                    <div class="text-sm text-gray-400">
+                        <i class="fas fa-user-shield"></i> Owner: {{ request.user.get_full_name|default:request.user.username }}
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="p-6">
+                {% for message in messages %}
+                <div class="p-4 rounded mb-4 {% if message.tags %}{{ message.tags }}{% else %}bg-blue-900 text-blue-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
